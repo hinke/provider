@@ -1,60 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine } from 'recharts';
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Brain, Battery, Trophy, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { Patient } from '@/types/patient';
+import { getPatientData } from '@/data/patients';
 
-// Import the Patient interface and mock data from the main page
-interface Patient {
-  id: string;
-  name: string;
-  dateOfBirth: string;
-  lastSciScore: number;
-  weekNumber: number;
-  totalWeeks: number;
-  status: 'improving' | 'declining' | 'stable';
-  lastUpdate: string;
-}
-
-// Mock data - should be moved to a shared location or API service
-const patients: Patient[] = [
-  {
-    id: 'P-2024-0123',
-    name: 'Sarah Johnson',
-    dateOfBirth: '1990-03-15',
-    lastSciScore: 6.0,
-    weekNumber: 5,
-    totalWeeks: 6,
-    status: 'improving',
-    lastUpdate: '2024-02-20'
-  },
-  {
-    id: 'P-2024-0124',
-    name: 'Michael Chen',
-    dateOfBirth: '1985-07-22',
-    lastSciScore: 8.5,
-    weekNumber: 3,
-    totalWeeks: 6,
-    status: 'stable',
-    lastUpdate: '2024-02-19'
-  },
-  {
-    id: 'P-2024-0125',
-    name: 'Emma Wilson',
-    dateOfBirth: '1995-11-30',
-    lastSciScore: 9.2,
-    weekNumber: 2,
-    totalWeeks: 6,
-    status: 'declining',
-    lastUpdate: '2024-02-21'
+const getStatusColor = (status: Patient['status']) => {
+  switch (status) {
+    case 'improving':
+      return 'bg-green-100 text-green-800';
+    case 'declining':
+      return 'bg-red-100 text-red-800';
+    case 'stable':
+      return 'bg-blue-100 text-blue-800';
   }
-];
-
-const getPatientData = (id: string): Patient | undefined => {
-  return patients.find(patient => patient.id === id);
 };
 
 const calculateAge = (dateOfBirth: string) => {
@@ -70,19 +34,11 @@ const calculateAge = (dateOfBirth: string) => {
   return age;
 };
 
-export default function PatientDashboard({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id: patientId } = use(params);
+export default function PatientDashboard() {
+  const params = useParams();
+  const patientId = params.id as string;
   const patientData = getPatientData(patientId);
   const [notes, setNotes] = useState('');
-  
-  if (!patientData) {
-    return <div className="p-6">Patient not found</div>;
-  }
-
   const notesStorageKey = `patientNotes-${patientId}`;
 
   useEffect(() => {
@@ -97,6 +53,10 @@ export default function PatientDashboard({
     setNotes(newNotes);
     localStorage.setItem(notesStorageKey, newNotes);
   };
+
+  if (!patientData) {
+    return <div className="p-6">Patient not found</div>;
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -149,16 +109,4 @@ export default function PatientDashboard({
       </Card>
     </div>
   );
-}
-
-// Helper function for status colors
-const getStatusColor = (status: Patient['status']) => {
-  switch (status) {
-    case 'improving':
-      return 'bg-green-100 text-green-800';
-    case 'declining':
-      return 'bg-red-100 text-red-800';
-    case 'stable':
-      return 'bg-blue-100 text-blue-800';
-  }
-}; 
+} 
